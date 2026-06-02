@@ -356,24 +356,28 @@ function loadAttendance(){
 }
 
 function addMarks(){
-  var name=document.getElementById("studentName").value;
-  var mark=document.getElementById("studentMark").value;
+  var name = document.getElementById("studentName").value;
+  var mark = document.getElementById("studentMark").value;
+  var subject = document.getElementById("subjectName").value;
 
-  if(name==="" || mark===""){
+  if(name === "" || mark === "" || subject === ""){
     alert("Fill all fields");
     return;
   }
 
   db.collection("marks").add({
-    name:name,
-    mark:mark,
-    createdAt:new Date()
+    name: name,
+    mark: mark,
+    subject: subject,
+    createdAt: new Date()
   }).then(function(){
-    document.getElementById("studentName").value="";
-    document.getElementById("studentMark").value="";
+    document.getElementById("studentName").value = "";
+    document.getElementById("studentMark").value = "";
+    document.getElementById("subjectName").value = "";
+
     loadMarks();
   });
-}
+  }
 
 function loadMarks(){
 
