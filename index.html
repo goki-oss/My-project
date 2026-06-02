@@ -131,6 +131,21 @@ Save Marks
 </button>
 
 </div>
+  <div class="upload-area">
+  <h3>Marks List</h3>
+
+  <table border="1" style="width:100%; text-align:center;">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Subject</th>
+        <th>Marks</th>
+      </tr>
+    </thead>
+
+    <tbody id="marksView"></tbody>
+  </table>
+  </div>
 
 <div id="marksList"></div>
 
@@ -398,16 +413,16 @@ var data=doc.data();
 
 document.getElementById("marksView").innerHTML +=
 "<div class='card'>" +
-"<b>"+data.student+"</b><br>" +
+"<b>"+data.name+"</b><br>" +
 "Subject : "+data.subject+"<br>" +
-"Marks : "+data.marks +
+"Marks : "+data.mark +
 "</div>";
 
 });
 
 });
 
-  }
+    }
 </script>
 
 </body>
