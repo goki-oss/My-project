@@ -376,32 +376,30 @@ function addMarks(){
 }
 
 function loadMarks(){
-  document.getElementById("marksList").innerHTML="";
 
-  db.collection("marks")
-  .orderBy("createdAt","desc")
-  .get()
-  .then(function(snapshot){
+document.getElementById("marksView").innerHTML="";
 
-    snapshot.forEach(function(doc){
+db.collection("marks")
+.orderBy("createdAt","desc")
+.get()
+.then(function(snapshot){
 
-      var d=doc.data();
+snapshot.forEach(function(doc){
 
-      var del="";
+var data=doc.data();
 
-      if(currentRole==="teacher"){
-        del="<br><button class='delete-btn' onclick=\"deleteData('marks','"+doc.id+"')\">Delete</button>";
-      }
+document.getElementById("marksView").innerHTML +=
+"<div class='card'>" +
+"<b>"+data.student+"</b><br>" +
+"Subject : "+data.subject+"<br>" +
+"Marks : "+data.marks +
+"</div>";
 
-      document.getElementById("marksList").innerHTML +=
-      "<div class='card'><b>"+d.name+
-      "</b><br>Mark : "+d.mark+
-      del+
-      "</div>";
-    });
+});
 
-  });
-}
+});
+
+  }
 </script>
 
 </body>
