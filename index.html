@@ -90,26 +90,50 @@ button.action{background:#4338ca;color:white;}
 
 <!-- ATTENDANCE -->
 <section id="attendance">
+
 <div class="upload-area teacher-only">
 <h3>Add Attendance</h3>
+
 <input type="text" id="attName" placeholder="Student Name">
-<button class="action" onclick="addAttendance()">Save</button>
+
+<button class="action" onclick="addAttendance()">
+Add Student
+</button>
+
 </div>
 
 <div id="attList"></div>
+
 </section>
 
 <!-- MARKS -->
 <section id="marks">
+
 <div class="upload-area teacher-only">
+
 <h3>Add Marks</h3>
-<input type="text" id="studentName">
-<input type="number" id="studentMark">
-<input type="text" id="subjectName">
-<button class="action" onclick="addMarks()">Save</button>
+
+<input type="text"
+id="studentName"
+placeholder="Student Name">
+
+<input type="text"
+id="subjectName"
+placeholder="Subject Name">
+
+<input type="number"
+id="studentMark"
+placeholder="Mark">
+
+<button class="action"
+onclick="addMarks()">
+Save Marks
+</button>
+
 </div>
 
 <div id="marksList"></div>
+
 </section>
 
 <!-- FIREBASE -->
@@ -240,78 +264,217 @@ function loadCollection(col,el){
 
 /* ATTENDANCE */
 function addAttendance(){
-  let name=document.getElementById("attName").value;
-  if(!name) return;
 
-  db.collection("attendance").add({
-    name,
-    present:false,
-    createdAt:new Date()
-  }).then(loadAttendance);
+let name=document.getElementById("attName").value;
+
+if(!name) return alert("Enter Name");
+
+db.collection("attendance").add({
+name:name,
+present:null,
+createdAt:new Date()
+})
+.then(()=>{
+document.getElementById("attName").value="";
+loadAttendance();
+});
+
 }
 
-function toggleAttendance(id,status){
-  db.collection("attendance").doc(id).update({
-    present: !status
-  }).then(loadAttendance);
+function toggleAttendance(id,value){
+
+db.collection("attendance")
+.doc(id)
+.update({
+present:value
+});
+
 }
 
 function deleteAttendance(id){
-  db.collection("attendance").doc(id).delete().then(loadAttendance);
+
+if(confirm("Delete Attendance?")){
+
+db.collection("attendance")
+.doc(id)
+.delete();
+
+}
+
 }
 
 function loadAttendance(){
-  let box=document.getElementById("attList");
-  box.innerHTML="";
 
-  db.collection("attendance").orderBy("createdAt","desc")
-  .onSnapshot(snap=>{
-    box.innerHTML="";
-    snap.forEach(doc=>{
-      let d=doc.data();
+let box=document.getElementById("attList");
 
-      box.innerHTML+=`
-        <div class="card">
-          ${d.name} - 
-          <button onclick="toggleAttendance('${doc.id}',${d.present})">
-            ${d.present?"Present":"Absent"}
-          </button>
-          <button onclick="deleteAttendance('${doc.id}')">Delete</button>
-        </div>`;
-    });
-  });
+db.collection("attendance")
+.orderBy("createdAt","desc")
+.onSnapshot(snapshot=>{
+
+box.innerHTML="";
+
+snapshot.forEach(doc=>{
+
+let d=doc.data();
+
+box.innerHTML+=`
+
+<div class="card">
+
+<b>${d.name}</b>
+
+<br><br>
+
+<button
+style="
+width:60px;
+height:60px;
+font-size:18px;
+border-radius:8px;
+border:2px solid green;
+background:${d.present===true?'green':'white'};
+color:${d.present===true?'white':'green'};
+"
+onclick="toggleAttendance('${doc.id}',true)"
+>
+✔ P
+</button>
+
+<button
+style="
+width:60px;
+height:60px;
+font-size:18px;
+border-radius:8px;
+border:2px solid red;
+margin-left:10px;
+background:${d.present===false?'red':'white'};
+color:${d.present===false?'white':'red'};
+"
+onclick="toggleAttendance('${doc.id}',false)"
+>
+✖ A
+</button>
+
+<button
+class="delete-btn"
+onclick="deleteAttendance('${doc.id}')"
+>
+Delete
+</button>
+
+</div>
+
+`;
+
+});
+
+});
+
 }
-
 /* MARKS */
 function addMarks(){
-  let n=document.getElementById("studentName").value;
-  let m=document.getElementById("studentMark").value;
-  let s=document.getElementById("subjectName").value;
 
-  db.collection("marks").add({
-    name:n,
-    mark:Number(m),
-    subject:s,
-    createdAt:new Date()
-  }).then(loadMarks);
+let name=document.getElementById("studentName").value;
+let subject=document.getElementById("subjectName").value;
+let mark=document.getElementById("studentMark").value;
+
+if(!name || !subject || !mark){
+
+alert("Fill All Fields");
+return;
+
+}
+
+db.collection("marks").add({
+
+name:name,
+subject:subject,
+mark:Number(mark),
+createdAt:new Date()
+
+})
+.then(()=>{
+
+document.getElementById("studentName").value="";
+document.getElementById("subjectName").value="";
+document.getElementById("studentMark").value="";
+
+loadMarks();
+
+});
+
+}
+
+function deleteMark(id){
+
+if(confirm("Delete Mark?")){
+
+db.collection("marks")
+.doc(id)
+.delete();
+
+}
+
 }
 
 function loadMarks(){
-  let box=document.getElementById("marksList");
-  box.innerHTML="";
 
-  db.collection("marks").orderBy("createdAt","desc")
-  .get().then(snap=>{
-    snap.forEach(doc=>{
-      let d=doc.data();
-      box.innerHTML+=`
-        <div class="card">
-          <b>${d.name}</b><br>
-          Subject: ${d.subject}<br>
-          Marks: ${d.mark}
-        </div>`;
-    });
-  });
+let box=document.getElementById("marksList");
+
+db.collection("marks")
+.orderBy("createdAt","desc")
+.onSnapshot(snapshot=>{
+
+box.innerHTML="";
+
+snapshot.forEach(doc=>{
+
+let d=doc.data();
+
+box.innerHTML+=`
+
+<div class="card">
+
+<b>${d.name}</b>
+
+<br><br>
+
+<div
+style="
+display:inline-block;
+width:80px;
+height:80px;
+border:2px solid #4338ca;
+border-radius:8px;
+padding:5px;
+text-align:center;
+margin-right:10px;
+">
+
+${d.subject}
+
+<br><br>
+
+<b>${d.mark}</b>
+
+</div>
+
+<button
+class="delete-btn"
+onclick="deleteMark('${doc.id}')"
+>
+Delete
+</button>
+
+</div>
+
+`;
+
+});
+
+});
+
 }
 </script>
 
