@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Firebase Classroom</title>
+
+<style>
+body{margin:0;font-family:Segoe UI;background:linear-gradient(to right,#eef2ff,#ffffff);}
+header{background:#4338ca;color:white;padding:18px;text-align:center;font-size:22px;font-weight:bold;}
+nav{background:#4f46e5;padding:10px;text-align:center;display:none;}
+nav button{margin:5px;padding:8px 14px;border:none;border-radius:6px;background:white;cursor:pointer;font-weight:bold;}
+section{padding:20px;display:none;}
+.card{background:white;padding:12px;margin:10px 0;border-radius:8px;box-shadow:0 3px 8px rgba(0,0,0,0.1);}
+input{width:100%;padding:8px;margin:6px 0;border-radius:6px;border:1px solid #ccc;}
+button.action{background:#4338ca;color:white;}
+img{width:120px;border-radius:8px;margin-top:8px;}
+.upload-area{margin-bottom:15px;}
+.delete-btn{background:red;color:white;padding:5px 10px;border:none;border-radius:5px;margin-top:6px;}
+</style>
+</head>
+
+<body>
+
+<header>📚 Firebase Classroom</header>
+
+<section id="login" style="display:block;">
+<h3>Login</h3>
+<select id="role">
+<option value="">Select Role</option>
+<option value="teacher">Teacher</option>
+<option value="student">Student</option>
+</select>
+<input type="text" id="email" placeholder="Email">
+<input type="password" id="password" placeholder="Password">
+<button class="action" onclick="login()">Login</button>
+<p id="msg"></p>
+</section>
+
+<nav id="menu">
+<button onclick="showSection('assignments')">Assignment</button>
+<button onclick="showSection('events')">Event</button>
+<button onclick="showSection('timetable')">Timetable</button>
+<button onclick="showSection('questionpapers')">Question Papers</button>
+<button onclick="showSection('attendance')">Attendance</button>
+<button onclick="showSection('marks')">Marks</button>
+<button onclick="logout()">Logout</button>
+</nav>
+
+<section id="assignments">
+<div class="upload-area teacher-only">
+<h3>Add Assignment</h3>
+<input type="text" id="asText" placeholder="Assignment Title">
+<input type="file" id="asPhoto" accept="image/*" capture="environment">
+<button class="action" onclick="addData('assignments','asText','asPhoto')">📸 Add</button>
+</div>
+<div id="asList"></div>
+</section>
+
+<section id="events">
+<div class="upload-area teacher-only">
+<h3>Add Event</h3>
+<input type="text" id="evText" placeholder="Event Name">
+<input type="file" id="evPhoto" accept="image/*" capture="environment">
+<button class="action" onclick="addData('events','evText','evPhoto')">📸 Add</button>
+</div>
+<div id="evList"></div>
+</section>
+
+<section id="timetable">
+<div class="upload-area teacher-only">
+<h3>Add Timetable</h3>
+<input type="text" id="ttText" placeholder="Timetable Info">
+<input type="file" id="ttPhoto" accept="image/*" capture="environment">
+<button class="action" onclick="addData('timetable','ttText','ttPhoto')">📸 Add</button>
+</div>
+<div id="ttList"></div>
+</section>
+
+<section id="questionpapers">
+<div class="upload-area teacher-only">
+<h3>Add Question Paper</h3>
+<input type="text" id="qpText" placeholder="Subject Name">
+<input type="file" id="qpPhoto" accept="image/*" capture="environment">
+<button class="action" onclick="addData('questionpapers','qpText','qpPhoto')">📸 Add</button>
+</div>
+<div id="qpList"></div>
+</section>
+<section id="attendance">
+
+<div class="upload-area teacher-only">
+<h3>Add Attendance</h3>
+
+<input type="text"
+id="attName"
+placeholder="Student Name">
+
+<input type="text"
+id="attStatus"
+placeholder="Present / Absent">
+
+<button class="action"
+onclick="addAttendance()">
+Save Attendance
+</button>
+
+</div>
+
+<div id="attList"></div>
+
+</section>
+<section id="marks">
+
+<div class="upload-area teacher-only">
+<h3>Add Marks</h3>
+
+<input type="text"
+id="studentName"
+placeholder="Student Name">
+
+<input type="number"
+id="studentMark"
+placeholder="Mark">
+
+<button class="action"
+onclick="addMarks()">
+Save Marks
+</button>
+
+</div>
+
+<div id="marksList"></div>
+
+</section>
+
+<!-- Firebase Scripts -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+<script>
+var firebaseConfig = {
+  apiKey: "AIzaSyBi1n7JXVJyS7dGjELomCbWQCe6Vd-QvSY",
+  authDomain: "classroomapp-43dd8.firebaseapp.com",
+  projectId: "classroomapp-43dd8",
+  storageBucket: "classroomapp-43dd8.firebasestorage.app",
+  messagingSenderId: "24600403915",
+  appId: "1:24600403915:web:e486b29d90cf6aad22e04e"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+var auth = firebase.auth();
+var db = firebase.firestore();
+var currentRole="";
+
+function login(){
+  var role=document.getElementById("role").value;
+  var email=document.getElementById("email").value;
+  var password=document.getElementById("password").value;
+
+  if(role===""){
+    document.getElementById("msg").innerText="Select Role";
+    return;
+  }
+
+  if(role==="teacher"){
+    auth.signInWithEmailAndPassword(email,password)
+    .then(function(){
+      currentRole="teacher";
+      openApp();
+    })
+    .catch(function(error){
+      document.getElementById("msg").innerText=error.message;
+    });
+  }
+
+  if(role==="student"){
+    if(email==="student@gmail.com" && password==="1234"){
+      currentRole="student";
+      openApp();
+    } else {
+      document.getElementById("msg").innerText="Invalid Student Login";
+    }
+  }
+}
+
+function openApp(){
+  document.getElementById("login").style.display="none";
+  document.getElementById("menu").style.display="block";
+  showSection("assignments");
+  loadAll();
+
+  if(currentRole==="student"){
+    document.querySelectorAll(".teacher-only").forEach(function(el){
+      el.style.display="none";
+    });
+  }
+}
+
+function logout(){
+  auth.signOut();
+  location.reload();
+}
+
+function showSection(id){
+  document.querySelectorAll("section").forEach(function(s){
+    s.style.display="none";
+  });
+  document.getElementById(id).style.display="block";
+}
+
+/* IMAGE COMPRESS + SAVE */
+function addData(collection,textId,fileId){
+  if(currentRole!=="teacher") return;
+
+  var text=document.getElementById(textId).value.trim();
+  var file=document.getElementById(fileId).files[0];
+
+  if(!file){ alert("Take photo first"); return; }
+  if(text===""){ alert("Enter title"); return; }
+
+  var reader=new FileReader();
+
+  reader.onload=function(event){
+    var img=new Image();
+    img.src=event.target.result;
+
+    img.onload=function(){
+      var canvas=document.createElement("canvas");
+      var maxWidth=600;
+      var scale=maxWidth/img.width;
+
+      canvas.width=maxWidth;
+      canvas.height=img.height*scale;
+
+      var ctx=canvas.getContext("2d");
+      ctx.drawImage(img,0,0,canvas.width,canvas.height);
+
+      var compressed=canvas.toDataURL("image/jpeg",0.6);
+
+      db.collection(collection).add({
+        text:text,
+        photo:compressed,
+        createdAt:new Date()
+      })
+      .then(function(){
+        alert("Added Successfully ✅");
+        document.getElementById(textId).value="";
+        document.getElementById(fileId).value="";
+        loadAll();
+      })
+      .catch(function(error){
+        alert("Error: "+error.message);
+      });
+    };
+  };
+
+  reader.readAsDataURL(file);
+}
+
+/* DELETE FUNCTION */
+function deleteData(collection,id){
+  if(currentRole!=="teacher") return;
+
+  if(confirm("Delete this item?")){
+    db.collection(collection).doc(id).delete()
+    .then(function(){
+      alert("Deleted Successfully ✅");
+      loadAll();
+    })
+    .catch(function(error){
+      alert("Error: "+error.message);
+    });
+  }
+}
+
+function loadAll(){
+  loadCollection("assignments","asList");
+  loadCollection("events","evList");
+  loadCollection("timetable","ttList");
+  loadCollection("questionpapers","qpList");
+
+  loadAttendance();
+  loadMarks();
+}
+
+function loadCollection(collection,listId){
+  document.getElementById(listId).innerHTML="";
+
+  db.collection(collection).orderBy("createdAt","desc").get()
+  .then(function(snapshot){
+    snapshot.forEach(function(doc){
+
+      var data=doc.data();
+      var deleteBtn="";
+
+      if(currentRole==="teacher"){
+        deleteBtn="<br><button class='delete-btn' onclick=\"deleteData('"+collection+"','"+doc.id+"')\">Delete</button>";
+      }
+
+      document.getElementById(listId).innerHTML+=
+      "<div class='card'><b>"+data.text+
+      "</b><br><img src='"+data.photo+"'>"+
+      deleteBtn+
+      "</div>";
+
+    });
+  });
+}
+function addAttendance(){
+  var name=document.getElementById("attName").value;
+  var status=document.getElementById("attStatus").value;
+
+  if(name==="" || status===""){
+    alert("Fill all fields");
+    return;
+  }
+
+  db.collection("attendance").add({
+    name:name,
+    status:status,
+    createdAt:new Date()
+  }).then(function(){
+    document.getElementById("attName").value="";
+    document.getElementById("attStatus").value="";
+    loadAttendance();
+  });
+}
+
+function loadAttendance(){
+  document.getElementById("attList").innerHTML="";
+
+  db.collection("attendance")
+  .orderBy("createdAt","desc")
+  .get()
+  .then(function(snapshot){
+
+    snapshot.forEach(function(doc){
+
+      var d=doc.data();
+
+      var del="";
+
+      if(currentRole==="teacher"){
+        del="<br><button class='delete-btn' onclick=\"deleteData('attendance','"+doc.id+"')\">Delete</button>";
+      }
+
+      document.getElementById("attList").innerHTML +=
+      "<div class='card'><b>"+d.name+
+      "</b><br>Status : "+d.status+
+      del+
+      "</div>";
+    });
+
+  });
+}
+
+function addMarks(){
+  var name=document.getElementById("studentName").value;
+  var mark=document.getElementById("studentMark").value;
+
+  if(name==="" || mark===""){
+    alert("Fill all fields");
+    return;
+  }
+
+  db.collection("marks").add({
+    name:name,
+    mark:mark,
+    createdAt:new Date()
+  }).then(function(){
+    document.getElementById("studentName").value="";
+    document.getElementById("studentMark").value="";
+    loadMarks();
+  });
+}
+
+function loadMarks(){
+  document.getElementById("marksList").innerHTML="";
+
+  db.collection("marks")
+  .orderBy("createdAt","desc")
+  .get()
+  .then(function(snapshot){
+
+    snapshot.forEach(function(doc){
+
+      var d=doc.data();
+
+      var del="";
+
+      if(currentRole==="teacher"){
+        del="<br><button class='delete-btn' onclick=\"deleteData('marks','"+doc.id+"')\">Delete</button>";
+      }
+
+      document.getElementById("marksList").innerHTML +=
+      "<div class='card'><b>"+d.name+
+      "</b><br>Mark : "+d.mark+
+      del+
+      "</div>";
+    });
+
+  });
+}
+</script>
+
+</body>
+</html>
