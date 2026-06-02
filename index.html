@@ -117,13 +117,26 @@ Add Student
 id="studentName"
 placeholder="Student Name">
 
+<div id="subjectsContainer">
+
+<div class="subjectRow">
+
 <input type="text"
-id="subjectName"
-placeholder="Subject Name">
+class="subject"
+placeholder="Subject">
 
 <input type="number"
-id="studentMark"
+class="mark"
 placeholder="Mark">
+
+</div>
+
+</div>
+
+<button class="action"
+onclick="addSubjectField()">
++ Add Subject
+</button>
 
 <button class="action"
 onclick="addMarks()">
@@ -135,7 +148,6 @@ Save Marks
 <div id="marksList"></div>
 
 </section>
-
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -327,9 +339,9 @@ box.innerHTML+=`
 
 <button
 style="
-width:60px;
-height:60px;
-font-size:18px;
+width:30px;
+height:30px;
+font-size:14px;
 border-radius:8px;
 border:2px solid green;
 background:${d.present===true?'green':'white'};
@@ -342,9 +354,9 @@ onclick="toggleAttendance('${doc.id}',true)"
 
 <button
 style="
-width:60px;
-height:60px;
-font-size:18px;
+width:30px;
+height:30px;
+font-size:14px;
 border-radius:8px;
 border:2px solid red;
 margin-left:10px;
@@ -375,32 +387,66 @@ Delete
 /* MARKS */
 function addMarks(){
 
-let name=document.getElementById("studentName").value;
-let subject=document.getElementById("subjectName").value;
-let mark=document.getElementById("studentMark").value;
+let name =
+document.getElementById("studentName").value;
 
-if(!name || !subject || !mark){
+if(!name){
 
-alert("Fill All Fields");
+alert("Enter Student Name");
 return;
+
+}
+
+let subjects=[];
+
+let subFields =
+document.querySelectorAll(".subject");
+
+let markFields =
+document.querySelectorAll(".mark");
+
+for(let i=0;i<subFields.length;i++){
+
+let sub=subFields[i].value;
+let mark=markFields[i].value;
+
+if(sub && mark){
+
+subjects.push({
+
+subject:sub,
+mark:Number(mark)
+
+});
+
+}
 
 }
 
 db.collection("marks").add({
 
 name:name,
-subject:subject,
-mark:Number(mark),
+subjects:subjects,
 createdAt:new Date()
 
 })
 .then(()=>{
 
-document.getElementById("studentName").value="";
-document.getElementById("subjectName").value="";
-document.getElementById("studentMark").value="";
+alert("Saved Successfully");
 
-loadMarks();
+document.getElementById("studentName").value="";
+
+document.getElementById("subjectsContainer").innerHTML=`
+<div class="subjectRow">
+<input type="text"
+class="subject"
+placeholder="Subject">
+
+<input type="number"
+class="mark"
+placeholder="Mark">
+</div>
+`;
 
 });
 
@@ -417,6 +463,30 @@ db.collection("marks")
 }
 
 }
+function addSubjectField(){
+
+let container =
+document.getElementById("subjectsContainer");
+
+container.innerHTML += `
+
+<div class="subjectRow">
+
+<input
+type="text"
+class="subject"
+placeholder="Subject">
+
+<input
+type="number"
+class="mark"
+placeholder="Mark">
+
+</div>
+
+`;
+
+  }
 
 function loadMarks(){
 
@@ -432,44 +502,57 @@ snapshot.forEach(doc=>{
 
 let d=doc.data();
 
-box.innerHTML+=`
-
+let html=`
 <div class="card">
 
 <b>${d.name}</b>
 
 <br><br>
+`;
 
-<div
-style="
+if(d.subjects){
+
+d.subjects.forEach(s=>{
+
+html+=`
+
+<div style="
 display:inline-block;
-width:80px;
-height:80px;
+width:90px;
+height:70px;
 border:2px solid #4338ca;
 border-radius:8px;
 padding:5px;
+margin:4px;
 text-align:center;
-margin-right:10px;
 ">
 
-${d.subject}
-
-<br><br>
-
-<b>${d.mark}</b>
-
-</div>
-
-<button
-class="delete-btn"
-onclick="deleteMark('${doc.id}')"
->
-Delete
-</button>
+${s.subject}
+<br>
+<b>${s.mark}</b>
 
 </div>
 
 `;
+
+});
+
+}
+
+html+=`
+
+<br>
+
+<button
+class="delete-btn"
+onclick="deleteMark('${doc.id}')">
+Delete
+</button>
+
+</div>
+`;
+
+box.innerHTML+=html;
 
 });
 
