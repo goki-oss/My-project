@@ -131,21 +131,7 @@ Save Marks
 </button>
 
 </div>
-  <div class="upload-area">
-  <h3>Marks List</h3>
-
-  <table border="1" style="width:100%; text-align:center;">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Subject</th>
-        <th>Marks</th>
-      </tr>
-    </thead>
-
-    <tbody id="marksView"></tbody>
-  </table>
-  </div>
+  
 
 <div id="marksList"></div>
 
@@ -347,31 +333,41 @@ function addAttendance(){
 }
 
 function loadAttendance(){
-  document.getElementById("attList").innerHTML="";
 
-  db.collection("attendance")
-  .orderBy("createdAt","desc")
-  .get()
-  .then(function(snapshot){
+db.collection("attendance")
+.orderBy("createdAt","desc")
+.onSnapshot(function(snapshot){
 
-    snapshot.forEach(function(doc){
+  var table = document.getElementById("attendanceView");
+  table.innerHTML = "";
 
-      var d=doc.data();
+  snapshot.forEach(function(doc){
 
-      var del="";
+    var data = doc.data();
 
-      if(currentRole==="teacher"){
-        del="<br><button class='delete-btn' onclick=\"deleteData('attendance','"+doc.id+"')\">Delete</button>";
-      }
+    var tick = data.present ? "✅ Present" : "❌ Absent";
 
-      document.getElementById("attList").innerHTML +=
-      "<div class='card'><b>"+d.name+
-      "</b><br>Status : "+d.status+
-      del+
-      "</div>";
-    });
+    table.innerHTML += `
+      <tr>
+        <td>${data.name}</td>
 
+        <td>
+          <button onclick="toggleAttendance('${doc.id}', ${data.present})">
+            ${tick}
+          </button>
+        </td>
+
+        <td>
+          <button onclick="deleteAttendance('${doc.id}')">
+            Delete
+          </button>
+        </td>
+      </tr>
+    `;
   });
+
+});
+
 }
 
 function addMarks(){
@@ -416,6 +412,7 @@ document.getElementById("marksView").innerHTML +=
 "<b>"+data.name+"</b><br>" +
 "Subject : "+data.subject+"<br>" +
 "Marks : "+data.mark +
+del+
 "</div>";
 
 });
